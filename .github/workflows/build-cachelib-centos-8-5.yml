@@ -100,14 +100,14 @@ jobs:
       - name: "build CacheLib"
         # Build cachelib in debug mode (-d) and with all tests (-t)
         run: ./contrib/build-package.sh -j -v -i -d -t cachelib
-      - uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: cachelib-cmake-logs
-          path: |
-            build-cachelib/CMakeFiles/*.log
-            build-cachelib/CMakeCache.txt
-            build-cachelib/Makefile
-            build-cachelib/**/Makefile
-          if-no-files-found: warn
-          retention-days: 1
+#      - uses: actions/upload-artifact@v2
+#        if: failure()
+#        with:
+#          name: cachelib-cmake-logs
+#          path: |
+#            build-cachelib/CMakeFiles/*.log
+#            build-cachelib/CMakeCache.txt
+#            build-cachelib/Makefile
+#            build-cachelib/**/Makefile
+#          if-no-files-found: warn
+#          retention-days: 1
