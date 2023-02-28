@@ -23,6 +23,7 @@
 #include <folly/io/async/EventBaseThread.h>
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -303,8 +304,14 @@ class AsyncCacheStressor : public Stressor {
       } else {
         wHdl = std::move(hdl).toWriteHandle();
       }
-      // auto nextIter = req->sizeBegin + 1;
-      // XCHECK_NE(nextIter, req->sizeEnd);
+#if __GNUC__ == 8
+      assert(req->sizeBegin + 1 != req->sizeEnd);
+#else
+      // gcc-8.5 crashes with an internal compiler error here. Might be a
+      // regression upstream in folly as this line compiled fine with 8.5
+      // before.
+      XDCHECK(req->sizeBegin + 1 != req->sizeEnd);
+#endif
       bool chainSuccessful = false;
       for (auto j = req->sizeBegin + 1; j != req->sizeEnd; j++) {
         ++stats.addChained;
