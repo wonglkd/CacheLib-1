@@ -112,6 +112,7 @@ jobs:
           cd opt/cachelib/tests
           nice make -j
           cat cachelib-test-summary.log
+          ! ls *.fail
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -121,5 +122,6 @@ jobs:
             build-cachelib/CMakeCache.txt
             build-cachelib/Makefile
             build-cachelib/**/Makefile
+            opt/cachelib/tests/cachelib-test-summary.log
           if-no-files-found: warn
           retention-days: 1
