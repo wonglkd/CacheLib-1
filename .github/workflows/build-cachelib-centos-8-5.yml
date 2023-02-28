@@ -107,6 +107,11 @@ jobs:
       - name: "build CacheLib"
         # Build cachelib in debug mode (-d) and with all tests (-t)
         run: ./contrib/build-package.sh -j -v -i -d -t cachelib
+      - name: "Run tests"
+        run: |
+          cd opt/cachelib/tests
+          nice make -j
+          cat cachelib-test-summary.log
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
