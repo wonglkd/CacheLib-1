@@ -95,19 +95,26 @@ jobs:
         run: ./contrib/build-package.sh -j -v -i fizz
       - name: "Install dependency: wangle"
         run: ./contrib/build-package.sh -j -v -i wangle
+      - name: "Read fbthrift HEAD"
+        run: echo "fbthrift_head=`cat .git/modules/fbthrift/HEAD`" >> $GITHUB_ENV
+      - name: "Use cache for build-fbthrift"
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-$${{ env.fbthrift_head }}
+          path: build-fbthrift
       - name: "Install dependency: fbthrift"
         run: ./contrib/build-package.sh -j -v -i fbthrift
       - name: "build CacheLib"
         # Build cachelib in debug mode (-d) and with all tests (-t)
         run: ./contrib/build-package.sh -j -v -i -d -t cachelib
-#      - uses: actions/upload-artifact@v2
-#        if: failure()
-#        with:
-#          name: cachelib-cmake-logs
-#          path: |
-#            build-cachelib/CMakeFiles/*.log
-#            build-cachelib/CMakeCache.txt
-#            build-cachelib/Makefile
-#            build-cachelib/**/Makefile
-#          if-no-files-found: warn
-#          retention-days: 1
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: cachelib-cmake-logs
+          path: |
+            build-cachelib/CMakeFiles/*.log
+            build-cachelib/CMakeCache.txt
+            build-cachelib/Makefile
+            build-cachelib/**/Makefile
+          if-no-files-found: warn
+          retention-days: 1
