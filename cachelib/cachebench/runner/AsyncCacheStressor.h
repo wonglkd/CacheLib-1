@@ -303,7 +303,8 @@ class AsyncCacheStressor : public Stressor {
       } else {
         wHdl = std::move(hdl).toWriteHandle();
       }
-      XDCHECK_NE(req->sizeBegin + 1, req->sizeEnd);
+      auto nextIter = req->sizeBegin + 1;
+      XCHECK_NE(nextIter, req->sizeEnd);
       bool chainSuccessful = false;
       for (auto j = req->sizeBegin + 1; j != req->sizeEnd; j++) {
         ++stats.addChained;
