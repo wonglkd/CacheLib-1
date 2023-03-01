@@ -1,5 +1,20 @@
 # Building CacheLib
 
+## Build status
+
+Clicking on a badge will show you the recent builds for that OS. If your target OS's build is failing, you may wish to check recent issues and PRs for known workarounds.
+
+- [![CentOS 8.1](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-centos-8-1.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-centos-8-1.yml?query=event%3Aschedule)
+- [![CentOS 8.5](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-centos-8-5.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-centos-8-5.yml?query=event%3Aschedule)
+- [![Debian 10](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-debian-10.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-debian-10.yml?query=event%3Aschedule)
+- [![Fedora 36](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-fedora-36.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-fedora-36.yml?query=event%3Aschedule)
+- [![Rocky Linux 8](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-rockylinux-8.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-rockylinux-8.yml?query=event%3Aschedule)
+- [![Rocky Linux 9](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-rockylinux-9.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-rockylinux-9.yml?query=event%3Aschedule)
+- [![Ubuntu 18](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-18.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-18.yml?query=event%3Aschedule)
+- [![Ubuntu 20](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-20.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-20.yml?query=event%3Aschedule)
+- [![Ubuntu 22](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-22.yml/badge.svg?event=schedule)](https://github.com/facebook/cachelib/actions/workflows/build-cachelib-ubuntu-22.yml?query=event%3Aschedule)
+
+
 ## Dependencies
 
 CacheLib depends on multiple libraries and programs.
