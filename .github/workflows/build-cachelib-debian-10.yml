@@ -56,8 +56,7 @@ jobs:
       - name: "Add Git safe directory"
         # Workaround for Docker image bug (GitHub issue #199).
         run: |
-          git config --system --add safe.directory /__w/CacheLib/CacheLib
-          git config --system --add safe.directory /__w/CacheLib-1/CacheLib-1
+          git config --system --add safe.directory /__w/${{github.event.repository.name}}/${{github.event.repository.name}}
       - name: "Install Prerequisites"
         run: ./contrib/build.sh -S -B
       - name: "Test: update-submodules"
