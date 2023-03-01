@@ -58,7 +58,7 @@ jobs:
         run: |
           git config --system --add safe.directory /__w/CacheLib/CacheLib
           git config --system --add safe.directory /__w/CacheLib-1/CacheLib-1
-- name: "Install Prerequisites"
+      - name: "Install Prerequisites"
         run: ./contrib/build.sh -S -B
       - name: "Test: update-submodules"
         run: ./contrib/update-submodules.sh
