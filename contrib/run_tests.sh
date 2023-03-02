@@ -26,11 +26,11 @@ OPTIONAL+=("allocator-test-MM2QTest")
 OPTIONAL+=("allocator-test-NvmCacheTests")
 # Failed on CI
 OPTIONAL+=("allocator-test-BlockCacheTest")  # Rocky 8.6, CentOS 8.1
-OPTIONAL+=("navy-test-DeviceTest")  # CentOS 8.1
-OPTIONAL+=("allocator-test-NavySetupTest")  # CentOS 8.1, Cent OS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
+OPTIONAL+=("allocator-test-NavySetupTest")  # all: CentOS 8.1, Cent OS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
 OPTIONAL+=("common-test-UtilTests")  # CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
+OPTIONAL+=("navy-test-DeviceTest")  # CentOS 8.1
 # Large pages need to be enabled
-OPTIONAL+=("shm-test-test_page_size")  # CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
+OPTIONAL+=("shm-test-test_page_size")  # all: CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
 
 TEST_TIMEOUT=5m
 BENCHMARK_TIMEOUT=20m
