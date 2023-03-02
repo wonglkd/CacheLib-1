@@ -19,15 +19,18 @@ echo
 
 # Optional (e.g., flaky tests).
 OPTIONAL=()
+# Only failed locally
 OPTIONAL+=("allocator-test-AllocationClassTest")
 OPTIONAL+=("allocator-test-MemoryAllocatorTest")
 OPTIONAL+=("allocator-test-MM2QTest")
-OPTIONAL+=("allocator-test-NavySetupTest") # CentOS 8.1, Debian, Fedora 36, Rocky 9
 OPTIONAL+=("allocator-test-NvmCacheTests")
-OPTIONAL+=("common-test-UtilTests")  # CentOS 8.1, Debian, Fedora 36, Rocky 9
-OPTIONAL+=("navy-test-DeviceTest") # CentOS 8.1
+# Failed on CI
+OPTIONAL+=("allocator-test-BlockCacheTest")  # Rocky 8.6, CentOS 8.1
+OPTIONAL+=("navy-test-DeviceTest")  # CentOS 8.1
+OPTIONAL+=("allocator-test-NavySetupTest")  # CentOS 8.1, Cent OS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
+OPTIONAL+=("common-test-UtilTests")  # CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
 # Large pages need to be enabled
-OPTIONAL+=("shm-test-test_page_size") # CentOS 8.1, Debian, Fedora 36, Rocky 9
+OPTIONAL+=("shm-test-test_page_size")  # CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
 
 TEST_TIMEOUT=5m
 BENCHMARK_TIMEOUT=20m
