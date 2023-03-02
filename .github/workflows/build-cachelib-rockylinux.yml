@@ -90,7 +90,7 @@ jobs:
           sed -i '$aset(LIBDWARF_INCLUDE_DIRS "/usr/include/libdwarf-0")' cachelib/external/folly/CMake/FindLibDwarf.cmake
           ./contrib/build-package.sh -S -j -v -i folly
         if: steps.cache-submodules.outputs.cache-hit != 'true' && ${{matrix.version}} == "9.0"
-      - name: "Install dependency: folly"
+      - name: "Install dependency: folly (rockylinux-8.0)"
         run: ./contrib/build-package.sh -j -v -i folly
         if: steps.cache-submodules.outputs.cache-hit != 'true' && ${{matrix.version}} != "9.0"
       - name: "Install dependency: fizz"
@@ -105,6 +105,8 @@ jobs:
       - name: "build CacheLib"
         # Build cachelib in debug mode (-d) and with all tests (-t)
         run: ./contrib/build-package.sh -j -v -i -d -t cachelib
+      - name: "Run tests"
+        run: ./contrib/run_tests.sh
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -114,5 +116,6 @@ jobs:
             build-cachelib/CMakeCache.txt
             build-cachelib/Makefile
             build-cachelib/**/Makefile
+            opt/cachelib/tests/*.log
           if-no-files-found: warn
           retention-days: 1
