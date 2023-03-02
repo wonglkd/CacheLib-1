@@ -1,0 +1,14 @@
+name: Test
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  test-workflow-check:
+    name: "Test test"
+    runs-on: ubuntu-latest
+    # Docker container image name
+    steps:
+      - name: "Show Head Commit"
+        env:
+          CONTENT: ${{ toJSON(github.event.head_commit) }}
+        run: echo "1_$CONTENT 2_$GITHUB_JOB 3_$GITHUB_ACTION 4_$GITHUB_ACTION_PATH 5_$GITHUB_ENV 6_$GITHUB_WORKFLOW 7_$RUNNER_OS"
