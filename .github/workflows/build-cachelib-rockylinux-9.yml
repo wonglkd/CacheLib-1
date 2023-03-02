@@ -15,8 +15,9 @@ name: build-cachelib-rockylinux-9.0
 on:
 #   push:
   pull_request:
-  schedule:
-     - cron:  '0 17 * * *'
+  # schedule:
+  #    - cron:  '0 17 * * *'
+  workflow_dispatch:
 jobs:
   build-cachelib-rockylinux-9:
     name: "RockyLinux-9.0 - Build CacheLib with all dependencies"

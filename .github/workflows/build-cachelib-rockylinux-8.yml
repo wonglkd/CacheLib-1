@@ -15,8 +15,9 @@ name: build-cachelib-rockylinux-8.6
 on:
 #   push:
   pull_request:
-  schedule:
-     - cron:  '0 15 * * 2,4,6'
+  # schedule:
+  #    - cron:  '0 15 * * 2,4,6'
+  workflow_dispatch:
 jobs:
   build-cachelib-centos8-latest:
     name: "RockyLinux-8.6 - Build CacheLib with all dependencies"

@@ -15,8 +15,9 @@ name: build-cachelib-centos-8.5
 on:
 #   push:
   pull_request:
-  schedule:
-     - cron:  '0 9 * * *'
+  # schedule:
+  #    - cron:  '0 9 * * *'
+  workflow_dispatch:
 jobs:
   build-cachelib-centos8-latest:
     name: "CentOS/8.5 - Build CacheLib with all dependencies"
