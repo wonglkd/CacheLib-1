@@ -82,7 +82,7 @@ jobs:
         id: cache-submodules
         with:
           # Using HEAD of submodules
-          key: $GITHUB_JOB-build-${{ hashFiles('.git/modules/*/HEAD') }}
+          key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
           path: opt/cachelib/lib
       - name: "Install dependency: folly (rockylinux-9.0)"
         run: |
