@@ -13,22 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Flakey tests, or those expected to fail.
-IGNORE_STATUS=()
-IGNORE_STATUS+=("allocator-test-AllocationClassTest")
-IGNORE_STATUS+=("allocator-test-MemoryAllocatorTest")
-IGNORE_STATUS+=("allocator-test-MM2QTest")
-IGNORE_STATUS+=("allocator-test-NavySetupTest")
-IGNORE_STATUS+=("navy-test-DeviceTest")
-IGNORE_STATUS+=("shm-test-test_page_size")
+# Optional (e.g., flaky tests).
+OPTIONAL=()
+OPTIONAL+=("allocator-test-AllocationClassTest")
+OPTIONAL+=("allocator-test-MemoryAllocatorTest")
+OPTIONAL+=("allocator-test-MM2QTest")
+OPTIONAL+=("allocator-test-NavySetupTest")
+OPTIONAL+=("allocator-test-NvmCacheTests")
+OPTIONAL+=("navy-test-DeviceTest")
+OPTIONAL+=("shm-test-test_page_size")
 
-# Do not run: long-running benchmarks.
-DO_NOT_RUN=()
-DO_NOT_RUN+=("benchmark-test-CompactCacheBench")  # 26 mins.
-DO_NOT_RUN+=("benchmark-test-MutexBench")  # 60 mins.
+# Skip long-running benchmarks.
+TO_SKIP=()
+TO_SKIP+=("benchmark-test-CompactCacheBench")  # 26 mins.
+TO_SKIP+=("benchmark-test-MutexBench")  # 60 mins.
 
-IGNORE_STATUS_LIST=`printf -- '%s\n' ${IGNORE_STATUS[@]}`
-DO_NOT_RUN_LIST=`printf -- '%s\n' ${DO_NOT_RUN[@]}`
+OPTIONAL_LIST=`printf -- '%s\n' ${OPTIONAL[@]}`
+TO_SKIP_LIST=`printf -- '%s\n' ${TO_SKIP[@]}`
 
 dir=$(dirname "$0")
 cd "$dir/.." || die "failed to change-dir into $dir/.."
@@ -38,17 +39,28 @@ cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
 
 echo "== Running tests for CI =="
 find * -type f -not -name "*bench*" -executable \
-  | grep -vF "$DO_NOT_RUN_LIST" \
-  | xargs -n1 -I {} make {}.log || echo Test {} failed
+  | grep -vF "$TO_SKIP_LIST" \
+  | xargs -n1 -I {} make -s {}.log || echo Test {} failed
 echo "Successful tests: `find -name '*.ok' | wc -l`"
 echo "Failed tests: `find -name '*.fail' | wc -l`"
 
 echo "== Running benchmarks for CI =="
 find * -type f -name "*bench*" -executable \
-  | grep -vF "$DO_NOT_RUN_LIST" \
-  | xargs -n1 -I {} make {}.log || echo Test {} failed
+  | grep -vF "$TO_SKIP_LIST" \
+  | xargs -n1 -I {} make -s {}.log || echo Test {} failed
 echo "Successful benchmarks: `find -name '*bench*.ok' | wc -l`"
 echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
+
+N_PASSED=`find -name '*.ok' | wc -l`
+N_FAILED=`find -name '*.fail' | wc -l`
+N_IGNORED=`find * -type f -name "*.fail" -exec basename {} .log.fail ';' | grep -F "$OPTIONAL_LIST" | wc -l`
+N_SKIPPED=${#TO_SKIP[@]}
+let "N_FAILED_NOT_IGNORED = $N_FAILED - $N_IGNORED"
+echo "## Test summary" >> $GITHUB_STEP_SUMMARY
+echo "| Passed | Failed | Ignored | Skipped" >> $GITHUB_STEP_SUMMARY
+echo "|--|--|--|--|" >> $GITHUB_STEP_SUMMARY
+echo "| $N_PASSED | $N_FAILED | $N_IGNORED | $N_SKIPPED |" >> $GITHUB_STEP_SUMMARY
+
 
 if ls *.fail > /dev/null 2>&1; then
     echo "== Failure details =="
@@ -56,13 +68,26 @@ if ls *.fail > /dev/null 2>&1; then
     grep "FAILED.*ms" *.log || true
     echo
     echo "=== Ignored test failures ==="
-    find * -type f -name "*.fail" -exec basename {} .log.fail ';' | grep -F "$IGNORE_STATUS_LIST"
+    find * -type f -name "*.fail" -exec basename {} .log.fail ';' \
+        | grep -F "$OPTIONAL_LIST"
     echo
     echo "== Summary of failures =="
-    find * -type f -name "*.fail" -exec basename {} .log.fail ';' | grep -vF "$IGNORE_STATUS_LIST"
-    echo
+    find * -type f -name "*.fail" -exec basename {} .log.fail ';' \
+        | grep -vF "$OPTIONAL_LIST"
+    STATUS=$?
 
+    if [ $STATUS -ne 0 ]; then
+        echo "Only ignored tests failed."
+    else
+        echo >> $GITHUB_STEP_SUMMARY
+        echo "## Failing tests" >> $GITHUB_STEP_SUMMARY
+        find * -type f -name "*.fail" -exec basename {} .log.fail ';' \
+            | grep -vF "$OPTIONAL_LIST" \
+            | awk ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
+
+        echo "$N_FAILED_NOT_IGNORED tests/benchmarks failed."
+        exit 1
+    fi
+else
+    echo "All tests passed."
 fi
-
-# Return success if we have no failures except ignored tests
-find * -type f -name "*.fail" -exec basename {} .log.fail ';' | grep -vF "$IGNORE_STATUS_LIST" > /dev/null
