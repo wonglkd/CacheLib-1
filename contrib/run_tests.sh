@@ -37,6 +37,10 @@ test -d cachelib || die "failed to change-dir to expected root directory"
 
 cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
 
+PREFIX="$PWD/opt/cachelib/"
+LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH
+
 echo "== Running tests for CI =="
 find * -type f -not -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
