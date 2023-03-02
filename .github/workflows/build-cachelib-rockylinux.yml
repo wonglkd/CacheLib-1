@@ -22,6 +22,7 @@ on:
 jobs:
   build-cachelib-rockylinux:
     strategy:
+      fail-fast: false
       matrix:
         version: ["8.6", "9.0"]
     name: "RockyLinux-${{matrix.version}} - Build CacheLib with all dependencies"
