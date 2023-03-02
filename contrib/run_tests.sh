@@ -41,19 +41,21 @@ PREFIX="$PWD/opt/cachelib/"
 LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:${LD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH
 
-echo "== Running tests for CI =="
+echo "::group::Running tests for CI"
 find * -type f -not -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
   | xargs -n1 -I {} make -s {}.log || echo Test {} failed
 echo "Successful tests: `find -name '*.ok' | wc -l`"
 echo "Failed tests: `find -name '*.fail' | wc -l`"
-
-echo "== Running benchmarks for CI =="
+echo "::endgroup::"
+echo
+echo "::group::Running benchmarks for CI"
 find * -type f -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
   | xargs -n1 -I {} make -s {}.log || echo Test {} failed
 echo "Successful benchmarks: `find -name '*bench*.ok' | wc -l`"
 echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
+echo "::endgroup::"
 
 N_PASSED=`find -name '*.ok' | wc -l`
 N_FAILED=`find -name '*.fail' | wc -l`
@@ -67,14 +69,16 @@ echo "| $N_PASSED | $N_FAILED | $N_IGNORED | $N_SKIPPED |" >> $GITHUB_STEP_SUMMA
 
 
 if ls *.fail > /dev/null 2>&1; then
-    echo "== Failure details =="
+    echo "::group::Failure details"
     grep "Segmentation fault" *.log || true
     grep "FAILED.*ms" *.log || true
+    echo "::endgroup"
     echo
     if [ $N_IGNORED -ne 0 ]; then
-        echo "=== Ignored test failures ==="
+        echo "::group::Ignored test failures "
         find * -type f -name "*.fail" -exec basename {} .log.fail ';' \
             | grep -F "$OPTIONAL_LIST"
+        echo "::endgroup"
         echo
         echo >> $GITHUB_STEP_SUMMARY
         echo "## Ignored test failures" >> $GITHUB_STEP_SUMMARY
@@ -82,10 +86,12 @@ if ls *.fail > /dev/null 2>&1; then
             | grep -F "$OPTIONAL_LIST" \
             | awk ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
     fi 
-    echo "== Summary of failures =="
+    echo "::group::Summary of failures"
     find * -type f -name "*.fail" -exec basename {} .log.fail ';' \
         | grep -vF "$OPTIONAL_LIST"
     STATUS=$?
+    echo "::endgroup"
+    echo
 
     if [ $STATUS -ne 0 ]; then
         echo "Only ignored tests failed."
