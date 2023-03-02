@@ -89,10 +89,10 @@ jobs:
           # see: https://aur.archlinux.org/packages/folly#comment-862543
           sed -i '$aset(LIBDWARF_INCLUDE_DIRS "/usr/include/libdwarf-0")' cachelib/external/folly/CMake/FindLibDwarf.cmake
           ./contrib/build-package.sh -S -j -v -i folly
-        if: steps.cache-submodules.outputs.cache-hit != 'true' && ${{matrix.version}} == "9.0"
+        if: steps.cache-submodules.outputs.cache-hit != 'true' && matrix.version == "9.0"
       - name: "Install dependency: folly (rockylinux-8.0)"
         run: ./contrib/build-package.sh -j -v -i folly
-        if: steps.cache-submodules.outputs.cache-hit != 'true' && ${{matrix.version}} != "9.0"
+        if: steps.cache-submodules.outputs.cache-hit != 'true' && matrix.version != "9.0"
       - name: "Install dependency: fizz"
         run: ./contrib/build-package.sh -j -v -i fizz
         if: steps.cache-submodules.outputs.cache-hit != 'true'
