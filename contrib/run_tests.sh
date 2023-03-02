@@ -15,6 +15,7 @@
 
 echo "run_tests.sh is for use by CI (selected tests, timeout)."
 echo "Users should go to opt/cachelib/tests and run make."
+echo
 
 # Optional (e.g., flaky tests).
 OPTIONAL=()
@@ -39,21 +40,26 @@ TO_SKIP+=("benchmark-test-MutexBench")  # 60 mins.
 OPTIONAL_LIST=`printf -- '%s\n' ${OPTIONAL[@]}`
 TO_SKIP_LIST=`printf -- '%s\n' ${TO_SKIP[@]}`
 
+MD_OUT=${GITHUB_STEP_SUMMARY:-summary.md}
+if [[ "$MD_OUT" != "$GITHUB_STEP_SUMMARY" ]]; then
+    echo "Markdown summary will be saved in $MD_OUT. Truncating it."
+    cat /dev/null > $MD_OUT
+    echo
+fi
+
 dir=$(dirname "$0")
 cd "$dir/.." || die "failed to change-dir into $dir/.."
 test -d cachelib || die "failed to change-dir to expected root directory"
 
 cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
 
-PREFIX="$PWD/opt/cachelib/"
+PREFIX="$PWD/opt/cachelib"
 LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:${LD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH
 
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-
-echo "Max test duration: $TEST_TIMEOUT"
-
-echo "::group::Running tests for CI (in parallel)"
+echo
+echo "::group::Running tests for CI (in parallel, max: $TEST_TIMEOUT)"
 find * -type f -not -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
   | awk ' { print $1 ".log" } ' | tr '\n' ' ' \
@@ -62,7 +68,7 @@ echo "::endgroup::"
 echo "Successful tests: `find -name '*.ok' | wc -l`"
 echo "Failed tests: `find -name '*.fail' | wc -l`"
 echo
-echo "::group::Running benchmarks for CI (in parallel)"
+echo "::group::Running benchmarks for CI (in parallel, max: $BENCHMARK_TIMEOUT)"
 find * -type f -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
   | awk ' { print $1 ".log" } ' | tr '\n' ' ' \
@@ -85,10 +91,10 @@ N_IGNORED=`echo $TESTS_IGNORED | wc -w`
 N_FAILURES_UNIGNORED=`echo $FAILURES_UNIGNORED | wc -w`
 N_SKIPPED=`echo $TO_SKIP | wc -w`
 
-echo "## Test summary" >> $GITHUB_STEP_SUMMARY
-echo "| Passed | Failed | Ignored | Timeout | Skipped" >> $GITHUB_STEP_SUMMARY
-echo "|--------|--------|---------|---------|---------|" >> $GITHUB_STEP_SUMMARY
-echo "| $N_PASSED | $N_FAILED | $N_IGNORED | $N_TIMEOUT | $N_SKIPPED |" >> $GITHUB_STEP_SUMMARY
+echo "## Test summary" >> $MD_OUT
+echo "| Passed | Failed | Ignored | Timeout | Skipped" >> $MD_OUT
+echo "|--------|--------|---------|---------|---------|" >> $MD_OUT
+echo "| $N_PASSED | $N_FAILED | $N_IGNORED | $N_TIMEOUT | $N_SKIPPED |" >> $MD_OUT
 
 
 if [ $N_FAILED -ne 0 ]; then
@@ -98,9 +104,9 @@ if [ $N_FAILED -ne 0 ]; then
         echo $TESTS_IGNORED | tr ' ' '\n'
         echo "::endgroup"
 
-        echo >> $GITHUB_STEP_SUMMARY
-        echo "## Ignored test failures" >> $GITHUB_STEP_SUMMARY
-        echo $TESTS_IGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
+        echo >> $MD_OUT
+        echo "## Ignored test failures" >> $MD_OUT
+        echo $TESTS_IGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
     fi 
 
     if [ $N_FAILURES_UNIGNORED -eq 0 ]; then
@@ -113,9 +119,9 @@ if [ $N_FAILED -ne 0 ]; then
         echo $FAILURES_UNIGNORED | tr ' ' '\n'
         echo "::endgroup"
 
-        echo >> $GITHUB_STEP_SUMMARY
-        echo "## Failing tests" >> $GITHUB_STEP_SUMMARY
-        echo $FAILURES_UNIGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
+        echo >> $MD_OUT
+        echo "## Failing tests" >> $MD_OUT
+        echo $FAILURES_UNIGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
 
         echo "::warning $N_FAILURES_UNIGNORED tests/benchmarks failed."
     fi
@@ -126,12 +132,12 @@ if [ $N_FAILED -ne 0 ]; then
     grep "FAILED.*ms" *.log || true
     echo "::endgroup"
 
-    echo >> $GITHUB_STEP_SUMMARY
-    echo "## Failure details" >> $GITHUB_STEP_SUMMARY
-    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-    grep "Segmentation fault" *.log || true >> $GITHUB_STEP_SUMMARY
-    grep "FAILED.*ms" *.log || true >> $GITHUB_STEP_SUMMARY
-    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+    echo >> $MD_OUT
+    echo "## Failure details" >> $MD_OUT
+    echo "\`\`\`" >> $MD_OUT
+    grep "Segmentation fault" *.log || true >> $MD_OUT
+    grep "FAILED.*ms" *.log || true >> $MD_OUT
+    echo "\`\`\`" >> $MD_OUT
 
 else
     STATUS=0
@@ -146,8 +152,8 @@ if [ $N_TIMEOUT -ne 0 ]; then
     echo "::endgroup"
 
 
-    echo "## Tests timed out" >> $GITHUB_STEP_SUMMARY
-    echo $TESTS_TIMEOUT | awk -v RS=' ' ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
+    echo "## Tests timed out" >> $MD_OUT
+    echo $TESTS_TIMEOUT | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
 
 fi
 
