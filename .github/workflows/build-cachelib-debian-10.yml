@@ -56,6 +56,21 @@ jobs:
       - name: "Add Git safe directory"
         # Workaround for Docker image bug (GitHub issue #199).
         run: git config --system --add safe.directory $GITHUB_WORKSPACE
+      - name: "Use cache for built libraries of submodules"
+        uses: actions/cache@v3
+        id: cache-submodules
+        with:
+          # Using HEAD of submodules
+          key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
+          path: |
+            opt/cachelib/lib
+            # opt/cachelib/lib/libfolly*
+            # opt/cachelib/lib/libfizz*
+            # opt/cachelib/lib/libwangle*
+            opt/cachelib/includes
+            opt/cachelib/bin/thrift1
+            opt/cachelib/bin/fizz
+            opt/cachelib/bin/fizz-bogoshim
       - name: "Install Prerequisites"
         run: ./contrib/build.sh -S -B
       - name: "Test: update-submodules"
@@ -72,13 +87,6 @@ jobs:
         run: ./contrib/build-package.sh -j -v -i sparsemap
       - name: "Install dependency: fmt"
         run: ./contrib/build-package.sh -j -v -i fmt
-      - name: "Use cache for built libraries of submodules"
-        uses: actions/cache@v3
-        id: cache-submodules
-        with:
-          # Using HEAD of submodules
-          key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
-          path: opt/cachelib/lib
       - name: "Install dependency: folly"
         run: ./contrib/build-package.sh -j -v -i folly
         if: steps.cache-submodules.outputs.cache-hit != 'true'
@@ -108,9 +116,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
       - uses: actions/upload-artifact@v2
-        # if: failure()
         with:
           name: cachelib-tests
           path: opt/cachelib/tests/*.log
           if-no-files-found: warn
-          retention-days: 1
+          retention-days: 7
