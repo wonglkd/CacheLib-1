@@ -102,7 +102,7 @@ if ls *.fail > /dev/null 2>&1; then
             | grep -vF "$OPTIONAL_LIST" \
             | awk ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
 
-        echo "$N_FAILED_NOT_IGNORED tests/benchmarks failed."
+        echo "::warning $N_FAILED_NOT_IGNORED tests/benchmarks failed."
     fi
 
     echo "## Failure details" >> $GITHUB_STEP_SUMMARY
