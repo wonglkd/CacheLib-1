@@ -13,15 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "run_tests.sh is for use by CI (selected tests, timeout)."
+echo "Users should go to opt/cachelib/tests and run make."
+
 # Optional (e.g., flaky tests).
 OPTIONAL=()
 OPTIONAL+=("allocator-test-AllocationClassTest")
 OPTIONAL+=("allocator-test-MemoryAllocatorTest")
 OPTIONAL+=("allocator-test-MM2QTest")
-OPTIONAL+=("allocator-test-NavySetupTest")
+OPTIONAL+=("allocator-test-NavySetupTest") # CentOS 8.1, Debian, Fedora 36
 OPTIONAL+=("allocator-test-NvmCacheTests")
-OPTIONAL+=("navy-test-DeviceTest")
-OPTIONAL+=("shm-test-test_page_size")
+OPTIONAL+=("common-test-UtilTests")  # CentOS 8.1, Debian, Fedora 36
+OPTIONAL+=("navy-test-DeviceTest") # CentOS 8.1
+OPTIONAL+=("shm-test-test_page_size") # CentOS 8.1, Debian, Fedora 36
 
 TEST_TIMEOUT=5m
 BENCHMARK_TIMEOUT=20m
@@ -43,6 +47,8 @@ cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
 PREFIX="$PWD/opt/cachelib/"
 LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:${LD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH
+
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
 echo "Max test duration: $TEST_TIMEOUT"
 
