@@ -100,6 +100,13 @@ if ls *.fail > /dev/null 2>&1; then
         # Comment out for now so we can figure out which tests work on which
         # exit 1
     fi
+
+    echo "## Failure details" >> $GITHUB_STEP_SUMMARY
+    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+    grep "Segmentation fault" *.log || true >> $GITHUB_STEP_SUMMARY
+    grep "FAILED.*ms" *.log || true >> $GITHUB_STEP_SUMMARY
+    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
 else
     echo "All tests passed."
 fi
