@@ -27,7 +27,7 @@ jobs:
     name: "CentOS/${{matrix.version}} - Build CacheLib with all dependencies"
     runs-on: ubuntu-latest
     # Docker container image name
-    container: "centos:${{matrix.version}}""
+    container: "centos:${{matrix.version}}"
     steps:
       - name: "Show Head Commit"
         env:
