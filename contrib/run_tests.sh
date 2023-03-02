@@ -97,8 +97,6 @@ if ls *.fail > /dev/null 2>&1; then
             | awk ' { print "- " $1 } ' >> $GITHUB_STEP_SUMMARY
 
         echo "$N_FAILED_NOT_IGNORED tests/benchmarks failed."
-        # Comment out for now so we can figure out which tests work on which
-        # exit 1
     fi
 
     echo "## Failure details" >> $GITHUB_STEP_SUMMARY
@@ -107,8 +105,10 @@ if ls *.fail > /dev/null 2>&1; then
     grep "FAILED.*ms" *.log || true >> $GITHUB_STEP_SUMMARY
     echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
+    # Comment out for now so we can figure out which tests work on which
+    # if [ $STATUS -eq 0 ]; then
+    #     exit 1
+    # fi
 else
     echo "All tests passed."
 fi
-
-
