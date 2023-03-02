@@ -123,6 +123,12 @@ jobs:
             build-cachelib/CMakeCache.txt
             build-cachelib/Makefile
             build-cachelib/**/Makefile
-            opt/cachelib/tests/*.log
+          if-no-files-found: warn
+          retention-days: 1
+      - uses: actions/upload-artifact@v2
+        # if: failure()
+        with:
+          name: cachelib-tests
+          path: opt/cachelib/tests/*.log
           if-no-files-found: warn
           retention-days: 1

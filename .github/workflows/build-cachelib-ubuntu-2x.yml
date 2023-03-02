@@ -22,6 +22,7 @@ on:
 jobs:
   build-cachelib-ubuntu-2x:
     strategy:
+      fail-fast: false
       matrix:
         version: ["20.04", "22.04"]
     name: "Ubuntu-${{matrix.version}} - Build CacheLib with all dependencies"
@@ -78,7 +79,7 @@ jobs:
         id: cache-submodules
         with:
           # Using HEAD of submodules
-          key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
+          key: ${{ github.job }}-${{matrix.version}}-build-${{ hashFiles('.git/modules/*/HEAD') }}
           path: opt/cachelib/lib
       - name: "Install dependency: folly"
         run: ./contrib/build-package.sh -j -v -i folly
@@ -107,5 +108,12 @@ jobs:
             build-cachelib/Makefile
             build-cachelib/**/Makefile
             opt/cachelib/tests/*.log
+          if-no-files-found: warn
+          retention-days: 1
+      - uses: actions/upload-artifact@v2
+        # if: failure()
+        with:
+          name: cachelib-tests
+          path: opt/cachelib/tests/*.log
           if-no-files-found: warn
           retention-days: 1
