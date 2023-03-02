@@ -11,55 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: build-cachelib-centos-8.5
+
+name: build-cachelib-ubuntu-2x
 on:
-#   push:
+#  push:
   pull_request:
   # schedule:
-  #    - cron:  '0 9 * * *'
+  #   - cron:  '0 5 * * 1,3,5'
   workflow_dispatch:
 jobs:
-  build-cachelib-centos8-latest:
-    name: "CentOS/8.5 - Build CacheLib with all dependencies"
-    runs-on: ubuntu-latest
-    # Docker container image name
-    container: "centos:latest"
+  build-cachelib-ubuntu-2x:
+    strategy:
+      matrix:
+        version: ["20.04", "22.04"]
+    name: "Ubuntu-${{matrix.version}} - Build CacheLib with all dependencies"
+    runs-on: ubuntu-${{matrix.version}}
     steps:
       - name: "Show Head Commit"
         env:
           CONTENT: ${{ toJSON(github.event.head_commit) }}
         run: echo "$CONTENT"
-      - name: "patch CentOS Sources location (1st time)"
-        # CentOS 8.2 and later was changed into "CentOS Stream".
-        # Around the same time, CentOS 8.1 became EOL (End-Of-Life),
-        # And the repositories were moved to the legacy "vault.centos.org" URL.
-        # Patch the yum config file to this new location.
-        run: |
-          cd /etc/yum.repos.d/
-          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
       - name: "update packages"
-        # stock centos has a problem with CMAKE, fails with:
-        #  "cmake: symbol lookup error: cmake: undefined symbol: archive_write_add_filter_zstd"
-        # updating solves it
-        run: dnf update -y
-      - name: "patch CentOS Sources location (again...)"
-        # The "dnf update -y" above overwrites the yum configuration files,
-        # patch them again to point to the vault URLs.
-        run: |
-          cd /etc/yum.repos.d/
-          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        run: sudo apt-get update
       - name: "install sudo,git"
-        run: dnf install -y sudo git cmake gcc
+        run: sudo apt-get install -y git procps
       - name: "System Information"
         run: |
           echo === uname ===
           uname -a
           echo === /etc/os-release ===
           cat /etc/os-release
-          echo === /etc/centos-release ===
-          cat /etc/centos-release
           echo === df -hl ===
           df -hl
           echo === nproc ===
@@ -70,8 +51,10 @@ jobs:
           top -b -n1 -1 -Eg || timeout 1 top -b -n1
           echo === env ===
           env
-          echo === gcc -v ===
-          gcc -v
+          echo === cc -v ===
+          cc -v
+          echo === g++ -v ===
+          g++ -v
       - name: "checkout sources"
         uses: actions/checkout@v2
       - name: "Install Prerequisites"

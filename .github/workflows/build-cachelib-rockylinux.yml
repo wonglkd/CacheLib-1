@@ -11,62 +11,47 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: build-cachelib-centos-8-1
+name: build-cachelib-rockylinux
 on:
-#  push:
+#   push:
   pull_request:
   # schedule:
-    #  - cron:  '0 11 * * 1,3,5'
+  #    - cron:  '0 15 * * 2,4,6'
+  #    - cron:  '0 17 * * *'
   workflow_dispatch:
 jobs:
-  build-cachelib-centos8-1-1911:
-    #if: "!contains(github.event.head_commit.author.name, 'svcscm')"
-    name: "CentOS/8.1.1911 - Build CacheLib with all dependencies"
+  build-cachelib-rockylinux:
+    strategy:
+      matrix:
+        version: ["8.6", "9.0"]
+    name: "RockyLinux-${{matrix.version}} - Build CacheLib with all dependencies"
     runs-on: ubuntu-latest
     # Docker container image name
-    container: "centos:8.1.1911"
+    container: "rockylinux:${{matrix.version}}"
     steps:
       - name: "Show Head Commit"
         env:
           CONTENT: ${{ toJSON(github.event.head_commit) }}
         run: echo "$CONTENT"
-      - name: "patch CentOS Sources location (1st time)"
-        # CentOS 8.2 and later was changed into "CentOS Stream".
-        # Around the same time, CentOS 8.1 became EOL (End-Of-Life),
-        # And the repositories were moved to the legacy "vault.centos.org" URL.
-        # Patch the yum config file to this new location.
-        run: |
-          cd /etc/yum.repos.d/
-          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
       - name: "update packages"
         # stock centos has a problem with CMAKE, fails with:
         #  "cmake: symbol lookup error: cmake: undefined symbol: archive_write_add_filter_zstd"
         # updating solves it
         run: dnf update -y
-      - name: "patch CentOS Sources location (again...)"
-        # The "dnf update -y" above overwrites the yum configuration files,
-        # patch them again to point to the vault URLs.
-        run: |
-          cd /etc/yum.repos.d/
-          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
       - name: "install sudo,git"
-        run: dnf install -y sudo git cmake gcc
+        run: dnf install -y sudo git cmake gcc procps
       - name: "System Information"
         run: |
           echo === uname ===
           uname -a
           echo === /etc/os-release ===
           cat /etc/os-release
-          echo === /etc/centos-release ===
-          cat /etc/centos-release
           echo === df -hl ===
           df -hl
-          echo === free -h ===
-          free -h
           echo === nproc ===
           nproc || true
+          echo === free -h ===
+          free -h
           echo === top ===
           top -b -n1 -1 -Eg || timeout 1 top -b -n1
           echo === env ===
@@ -91,8 +76,12 @@ jobs:
         run: ./contrib/build-package.sh -j -v -i sparsemap
       - name: "Install dependency: fmt"
         run: ./contrib/build-package.sh -j -v -i fmt
+      - name: "Workaround for folly"
+        # see: https://aur.archlinux.org/packages/folly#comment-862543
+        run: sed -i '$aset(LIBDWARF_INCLUDE_DIRS "/usr/include/libdwarf-0")' cachelib/external/folly/CMake/FindLibDwarf.cmake
+        if: ${{matrix.version}} == "9.0"
       - name: "Install dependency: folly"
-        run: ./contrib/build-package.sh -j -v -i folly
+        run: ./contrib/build-package.sh -S -j -v -i folly
       - name: "Install dependency: fizz"
         run: ./contrib/build-package.sh -j -v -i fizz
       - name: "Install dependency: wangle"
