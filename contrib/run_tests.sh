@@ -21,11 +21,12 @@ OPTIONAL=()
 OPTIONAL+=("allocator-test-AllocationClassTest")
 OPTIONAL+=("allocator-test-MemoryAllocatorTest")
 OPTIONAL+=("allocator-test-MM2QTest")
-OPTIONAL+=("allocator-test-NavySetupTest") # CentOS 8.1, Debian, Fedora 36
+OPTIONAL+=("allocator-test-NavySetupTest") # CentOS 8.1, Debian, Fedora 36, Rocky 9
 OPTIONAL+=("allocator-test-NvmCacheTests")
-OPTIONAL+=("common-test-UtilTests")  # CentOS 8.1, Debian, Fedora 36
+OPTIONAL+=("common-test-UtilTests")  # CentOS 8.1, Debian, Fedora 36, Rocky 9
 OPTIONAL+=("navy-test-DeviceTest") # CentOS 8.1
-OPTIONAL+=("shm-test-test_page_size") # CentOS 8.1, Debian, Fedora 36
+# Large pages need to be enabled
+OPTIONAL+=("shm-test-test_page_size") # CentOS 8.1, Debian, Fedora 36, Rocky 9
 
 TEST_TIMEOUT=5m
 BENCHMARK_TIMEOUT=20m
@@ -77,12 +78,12 @@ TESTS_TIMEOUT=`find * -type f -executable | grep -vF "$TESTS_PASSED\n$TESTS_FAIL
 TESTS_IGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -F "$OPTIONAL_LIST"`
 FAILURES_UNIGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -vF "$OPTIONAL_LIST"`
 
-N_TIMEOUT=${#TESTS_TIMEOUT[@]}
-N_PASSED=${#TESTS_PASSED[@]}
-N_FAILED=${#TESTS_FAILED[@]}
-N_IGNORED=${#TESTS_IGNORED[@]}
-N_FAILURES_UNIGNORED=${#FAILURES_UNIGNORED[@]}
-N_SKIPPED=${#TO_SKIP[@]}
+N_TIMEOUT=`echo $TESTS_TIMEOUT | wc -w`
+N_PASSED=`echo $TESTS_PASSED | wc -w`
+N_FAILED=`echo $TESTS_FAILED | wc -w`
+N_IGNORED=`echo $TESTS_IGNORED | wc -w`
+N_FAILURES_UNIGNORED=`echo $FAILURES_UNIGNORED | wc -w`
+N_SKIPPED=`echo $TO_SKIP | wc -w`
 
 echo "## Test summary" >> $GITHUB_STEP_SUMMARY
 echo "| Passed | Failed | Ignored | Timeout | Skipped" >> $GITHUB_STEP_SUMMARY
