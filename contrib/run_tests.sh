@@ -45,10 +45,10 @@ TEST_TIMEOUT=15m
 BENCHMARK_TIMEOUT=20m
 PARALLELISM=10
 
-OPTIONAL_LIST=`printf -- '%s\n' ${OPTIONAL[@]}`
-TO_SKIP_LIST=`printf -- '%s\n' ${TO_SKIP[@]}`
+printf -v OPTIONAL_LIST -- '%s\n' ${OPTIONAL[@]}
+printf -v TO_SKIP_LIST -- '%s\n' ${TO_SKIP[@]}
 
-MD_OUT=${GITHUB_STEP_SUMMARY:-summary.md}
+MD_OUT=${GITHUB_STEP_SUMMARY:-$PWD/summary.md}
 if [[ "$MD_OUT" != "$GITHUB_STEP_SUMMARY" ]]; then
     echo "Markdown summary will be saved in $MD_OUT. Truncating it."
     echo "Time started: `date`" > $MD_OUT
@@ -76,8 +76,8 @@ echo
 echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
 timeout --preserve-status $TEST_TIMEOUT make -j $PARALLELISM -s $TESTS_TO_RUN
 echo "::endgroup::"
-echo "Successful tests: `find -maxdepth 1 -name '*.ok' | wc -l`"
-echo "Failed tests: `find -maxdepth 1 -name '*.fail' | wc -l`"
+echo "Successful tests: `find -maxdepth 0 -name '*.ok' | wc -l`"
+echo "Failed tests: `find -maxdepth 0 -name '*.fail' | wc -l`"
 echo
 
 BENCHMARKS_TO_RUN=`find * -type f -name "*bench*" -executable \
@@ -92,18 +92,21 @@ echo "Successful benchmarks: `find -name '*bench*.ok' | wc -l`"
 echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
 
 
-TESTS_PASSED=`find * -maxdepth 1 -name '*.log.ok' | sed 's/\.log\.ok$//'`
-TESTS_FAILED=`find * -maxdepth 1 -name '*.log.fail' | sed 's/\.log\.fail$//'`
-TESTS_TIMEOUT=`find * -type f -executable | grep -vF "${TESTS_PASSED// /$'\n'}\n${TESTS_FAILED// /$'\n'}\n$TO_SKIP_LIST"`
-TESTS_IGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -F "$OPTIONAL_LIST"`
-FAILURES_UNIGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -vF "$OPTIONAL_LIST"`
+TESTS_PASSED=`find * -maxdepth 0 -name '*.log.ok' | sed 's/\.log\.ok$//'`
+TESTS_FAILED=`find * -maxdepth 0 -name '*.log.fail' | sed 's/\.log\.fail$//'`
+TESTS_TIMEOUT=`find * -type f -executable \
+    | grep -vF "$TESTS_PASSED" \
+    | grep -vF "$TESTS_FAILED" \
+    | grep -vF "$TO_SKIP_LIST"`
+TESTS_IGNORED=`echo "$TESTS_FAILED" | grep -F "$OPTIONAL_LIST"`
+FAILURES_UNIGNORED=`echo "$TESTS_FAILED" | grep -vF "$OPTIONAL_LIST"`
 
 N_TIMEOUT=`echo $TESTS_TIMEOUT | wc -w`
 N_PASSED=`echo $TESTS_PASSED | wc -w`
 N_FAILED=`echo $TESTS_FAILED | wc -w`
 N_IGNORED=`echo $TESTS_IGNORED | wc -w`
 N_FAILURES_UNIGNORED=`echo $FAILURES_UNIGNORED | wc -w`
-N_SKIPPED=`echo $TO_SKIP | wc -w`
+N_SKIPPED=`echo $TO_SKIP_LIST | wc -w`
 
 echo "## Test summary" >> $MD_OUT
 echo "| Passed | Failed | Ignored | Timeout | Skipped" >> $MD_OUT
@@ -115,12 +118,12 @@ if [ $N_FAILED -ne 0 ]; then
     if [ $N_IGNORED -ne 0 ]; then
         echo
         echo "::group::Ignored test failures "
-        echo $TESTS_IGNORED | tr ' ' '\n'
+        echo "$TESTS_IGNORED"
         echo "::endgroup"
 
         echo >> $MD_OUT
         echo "## Ignored test failures" >> $MD_OUT
-        echo $TESTS_IGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
+        echo "$TESTS_IGNORED" | awk ' { print "- " $1 } ' >> $MD_OUT
     fi 
 
     if [ $N_FAILURES_UNIGNORED -eq 0 ]; then
@@ -130,12 +133,12 @@ if [ $N_FAILED -ne 0 ]; then
         STATUS=1
         echo
         echo "::group::Failing tests"
-        echo $FAILURES_UNIGNORED | tr ' ' '\n'
+        echo "$FAILURES_UNIGNORED"
         echo "::endgroup"
 
         echo >> $MD_OUT
         echo "## Failing tests" >> $MD_OUT
-        echo $FAILURES_UNIGNORED | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
+        echo "$FAILURES_UNIGNORED" | awk ' { print "- " $1 } ' >> $MD_OUT
 
         echo "::warning $N_FAILURES_UNIGNORED tests/benchmarks failed."
     fi
@@ -149,8 +152,8 @@ if [ $N_FAILED -ne 0 ]; then
     echo >> $MD_OUT
     echo "## Failure details" >> $MD_OUT
     echo "\`\`\`" >> $MD_OUT
-    grep "Segmentation fault" *.log || true >> $MD_OUT
-    grep "FAILED.*ms" *.log || true >> $MD_OUT
+    grep "Segmentation fault" *.log >> $MD_OUT || true
+    grep "FAILED.*ms" *.log >> $MD_OUT || true
     echo "\`\`\`" >> $MD_OUT
 
 else
@@ -162,17 +165,17 @@ fi
 if [ $N_TIMEOUT -ne 0 ]; then
     echo
     echo "::group::Timed out tests"
-    echo $TESTS_TIMEOUT | tr ' ' '\n'
+    echo "$TESTS_TIMEOUT"
     echo "::endgroup"
 
 
     echo "## Tests timed out" >> $MD_OUT
-    echo $TESTS_TIMEOUT | awk -v RS=' ' ' { print "- " $1 } ' >> $MD_OUT
+    echo "$TESTS_TIMEOUT" | awk ' { print "- " $1 } ' >> $MD_OUT
 
 fi
 
 
-if [ $STATUS -eq 0 ]; then
+if [ $STATUS -ne 0 ]; then
     echo
     echo "Return error"
     # Comment out for now so we can figure out which tests work on which
