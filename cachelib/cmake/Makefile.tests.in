@@ -86,6 +86,7 @@ $(LOGS): %.log: %
 	else \
 		touch "$@.fail" ; \
 	fi
+	@echo Completed $^
 
 clean:
 	@rm -f $(LOGS) $(MARKERS_OK) $(MARKERS_FAIL) $(OUTPUT)
