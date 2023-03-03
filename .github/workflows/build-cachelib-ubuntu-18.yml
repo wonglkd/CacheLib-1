@@ -98,7 +98,7 @@ jobs:
           key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
           path: |
             opt/cachelib/lib
-            opt/cachelib/includes
+            opt/cachelib/include
             opt/cachelib/bin/thrift1
             opt/cachelib/bin/fizz
             opt/cachelib/bin/fizz-bogoshim

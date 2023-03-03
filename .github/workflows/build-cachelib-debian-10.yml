@@ -83,10 +83,10 @@ jobs:
             # opt/cachelib/lib/libfolly*
             # opt/cachelib/lib/libfizz*
             # opt/cachelib/lib/libwangle*
-            opt/cachelib/includes/fizz
-            opt/cachelib/includes/folly
-            opt/cachelib/includes/thrift
-            opt/cachelib/includes/wangle
+            opt/cachelib/include/fizz
+            opt/cachelib/include/folly
+            opt/cachelib/include/thrift
+            opt/cachelib/include/wangle
             opt/cachelib/bin/thrift1
             opt/cachelib/bin/fizz
             opt/cachelib/bin/fizz-bogoshim

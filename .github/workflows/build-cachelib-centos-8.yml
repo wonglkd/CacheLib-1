@@ -106,7 +106,7 @@ jobs:
             # opt/cachelib/lib/libfolly*
             # opt/cachelib/lib/libfizz*
             # opt/cachelib/lib/libwangle*
-            opt/cachelib/includes
+            opt/cachelib/include
             opt/cachelib/bin/thrift1
             opt/cachelib/bin/fizz
             opt/cachelib/bin/fizz-bogoshim
