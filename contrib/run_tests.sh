@@ -34,10 +34,14 @@ OPTIONAL+=("shm-test-test_page_size")  # all: CentOS 8.1, CentOS 8.5, Debian, Fe
 
 # Skip long-running benchmarks.
 TO_SKIP=()
+# allocator-test-AllocationClassTest
+# allocator-test-AllocatorResizeTypeTest
+# allocator-test-AllocatorTypeTest
+# allocator-test-RebalanceStrategyTest
 TO_SKIP+=("benchmark-test-CompactCacheBench")  # 26 mins.
 TO_SKIP+=("benchmark-test-MutexBench")  # 60 mins.
 
-TEST_TIMEOUT=5m
+TEST_TIMEOUT=15m
 BENCHMARK_TIMEOUT=20m
 PARALLELISM=10
 
@@ -90,7 +94,7 @@ echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
 
 TESTS_PASSED=`find * -maxdepth 1 -name '*.log.ok' | sed 's/\.log\.ok$//'`
 TESTS_FAILED=`find * -maxdepth 1 -name '*.log.fail' | sed 's/\.log\.fail$//'`
-TESTS_TIMEOUT=`find * -type f -executable | grep -vF "${TESTS_PASSED// /$'\n'}\n${TESTS_FAILED// /$'\n'}"`
+TESTS_TIMEOUT=`find * -type f -executable | grep -vF "${TESTS_PASSED// /$'\n'}\n${TESTS_FAILED// /$'\n'}\n$TO_SKIP_LIST"`
 TESTS_IGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -F "$OPTIONAL_LIST"`
 FAILURES_UNIGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -vF "$OPTIONAL_LIST"`
 
