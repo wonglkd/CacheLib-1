@@ -55,7 +55,7 @@ jobs:
           echo === gcc -v ===
           gcc -v
       - name: "checkout sources"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: "git: ignore unsafe-directories"
         run: git config --global --add safe.directory '*'
       - name: "Install Prerequisites"
