@@ -32,13 +32,14 @@ OPTIONAL+=("navy-test-DeviceTest")  # CentOS 8.1
 # Large pages need to be enabled
 OPTIONAL+=("shm-test-test_page_size")  # all: CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
 
-TEST_TIMEOUT=5m
-BENCHMARK_TIMEOUT=20m
-
 # Skip long-running benchmarks.
 TO_SKIP=()
 TO_SKIP+=("benchmark-test-CompactCacheBench")  # 26 mins.
 TO_SKIP+=("benchmark-test-MutexBench")  # 60 mins.
+
+TEST_TIMEOUT=5m
+BENCHMARK_TIMEOUT=20m
+PARALLELISM=10
 
 OPTIONAL_LIST=`printf -- '%s\n' ${OPTIONAL[@]}`
 TO_SKIP_LIST=`printf -- '%s\n' ${TO_SKIP[@]}`
@@ -46,7 +47,7 @@ TO_SKIP_LIST=`printf -- '%s\n' ${TO_SKIP[@]}`
 MD_OUT=${GITHUB_STEP_SUMMARY:-summary.md}
 if [[ "$MD_OUT" != "$GITHUB_STEP_SUMMARY" ]]; then
     echo "Markdown summary will be saved in $MD_OUT. Truncating it."
-    cat /dev/null > $MD_OUT
+    echo "Time started: `date`" > $MD_OUT
     echo
 fi
 
@@ -54,36 +55,42 @@ dir=$(dirname "$0")
 cd "$dir/.." || die "failed to change-dir into $dir/.."
 test -d cachelib || die "failed to change-dir to expected root directory"
 
-cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
-
 PREFIX="$PWD/opt/cachelib"
-LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:${LD_LIBRARY_PATH:-}"
+LD_LIBRARY_PATH="$PREFIX/lib:${LD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH
 
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-echo
-echo "::group::Running tests for CI (in parallel, max: $TEST_TIMEOUT)"
-find * -type f -not -name "*bench*" -executable \
+
+cd opt/cachelib/tests || die "failed to change-dir into opt/cachelib/tests"
+
+TESTS_TO_RUN=`find * -type f -not -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
-  | awk ' { print $1 ".log" } ' | tr '\n' ' ' \
-  | xargs timeout --preserve-status $TEST_TIMEOUT make -j -s
+  | awk ' { print $1 ".log" } '`
+N_TESTS=`echo $TESTS_TO_RUN | wc -w`
+
+echo
+echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
+timeout --preserve-status $TEST_TIMEOUT make -j $PARALLELISM -s $TESTS_TO_RUN
 echo "::endgroup::"
-echo "Successful tests: `find -name '*.ok' | wc -l`"
-echo "Failed tests: `find -name '*.fail' | wc -l`"
+echo "Successful tests: `find -maxdepth 1 -name '*.ok' | wc -l`"
+echo "Failed tests: `find -maxdepth 1 -name '*.fail' | wc -l`"
 echo
-echo "::group::Running benchmarks for CI (in parallel, max: $BENCHMARK_TIMEOUT)"
-find * -type f -name "*bench*" -executable \
+
+BENCHMARKS_TO_RUN=`find * -type f -name "*bench*" -executable \
   | grep -vF "$TO_SKIP_LIST" \
-  | awk ' { print $1 ".log" } ' | tr '\n' ' ' \
-  | xargs timeout --preserve-status $BENCHMARK_TIMEOUT make -j -s
+  | awk ' { print $1 ".log" } '`
+N_BENCHMARKS=`echo $BENCHMARKS_TO_RUN | wc -w`
+
+echo "::group::Running benchmarks for CI (total: $N_BENCHMARKS, max: $BENCHMARK_TIMEOUT)"
+timeout --preserve-status $BENCHMARK_TIMEOUT make -j $PARALLELISM -s $BENCHMARKS_TO_RUN
 echo "::endgroup::"
 echo "Successful benchmarks: `find -name '*bench*.ok' | wc -l`"
 echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
 
 
-TESTS_PASSED=`find * -name '*.log.ok' | sed 's/\.[^.]*$//'`
-TESTS_FAILED=`find * -name '*.log.fail' | sed 's/\.[^.]*$//'`
-TESTS_TIMEOUT=`find * -type f -executable | grep -vF "$TESTS_PASSED\n$TESTS_FAILED" | sed 's/\.[^.]*$//'`
+TESTS_PASSED=`find * -maxdepth 1 -name '*.log.ok' | sed 's/\.log\.ok$//'`
+TESTS_FAILED=`find * -maxdepth 1 -name '*.log.fail' | sed 's/\.log\.fail$//'`
+TESTS_TIMEOUT=`find * -type f -executable | grep -vF "${TESTS_PASSED// /$'\n'}\n${TESTS_FAILED// /$'\n'}"`
 TESTS_IGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -F "$OPTIONAL_LIST"`
 FAILURES_UNIGNORED=`echo $TESTS_FAILED | tr ' ' '\n' | grep -vF "$OPTIONAL_LIST"`
 
@@ -163,7 +170,7 @@ fi
 
 if [ $STATUS -eq 0 ]; then
     echo
-    echo "Return as error"
+    echo "Return error"
     # Comment out for now so we can figure out which tests work on which
     # exit 1
 fi
