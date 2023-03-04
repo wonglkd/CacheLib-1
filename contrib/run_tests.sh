@@ -131,9 +131,8 @@ if [ $N_FAILED -ne 0 ]; then
     else
         STATUS=1
         echo
-        echo "::group::Failing tests"
+        echo "== Failing tests =="
         echo "$FAILURES_UNIGNORED"
-        echo "::endgroup"
 
         echo >> $MD_OUT
         echo "## Failing tests" >> $MD_OUT
@@ -164,6 +163,7 @@ fi
 echo
 echo "::group::Skipped tests"
 echo "$TO_SKIP_LIST"
+echo "::endgroup"
 
 echo "## Skipped tests" >> $MD_OUT
 echo "$TO_SKIP_LIST" | awk ' { print "# " $1 } ' >> $MD_OUT
