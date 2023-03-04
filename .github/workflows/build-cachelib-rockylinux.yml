@@ -97,7 +97,9 @@ jobs:
           # see: https://aur.archlinux.org/packages/folly#comment-862543
           sed -i '$aset(LIBDWARF_INCLUDE_DIRS "/usr/include/libdwarf-0")' cachelib/external/folly/CMake/FindLibDwarf.cmake
           ./contrib/build-package.sh -S -j -v -i folly
-        if: steps.cache-submodules.outputs.cache-hit != 'true' && matrix.version == '9.0'
+        # if: steps.cache-submodules.outputs.cache-hit != 'true' && matrix.version == '9.0'
+        # libdwarf error if using cache - can't find /usr/include/libdwarf-0"
+        if:  matrix.version == '9.0'
       - name: "Install dependency: folly (rockylinux-8.0)"
         run: ./contrib/build-package.sh -j -v -i folly
         if: steps.cache-submodules.outputs.cache-hit != 'true' && matrix.version != '9.0'
@@ -115,7 +117,7 @@ jobs:
         run: ./contrib/build-package.sh -j -v -i -d -t cachelib
       - name: "Run tests"
         run: ./contrib/run_tests.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: cachelib-cmake-logs
@@ -126,7 +128,7 @@ jobs:
             build-cachelib/**/Makefile
           if-no-files-found: warn
           retention-days: 1
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cachelib-tests
           path: opt/cachelib/tests/*.log

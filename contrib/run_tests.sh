@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "run_tests.sh is for use by CI (selected tests, timeout)."
-echo "Users should go to opt/cachelib/tests and run make."
-echo
+if [[ "$GITHUB_STEP_SUMMARY" == "" ]]; then
+    echo "run_tests.sh is for use by CI (selected tests, timeout)."
+    echo "Users should go to opt/cachelib/tests and run make."
+    echo
+fi
 
 # Optional (e.g., flaky tests).
 OPTIONAL=()
@@ -45,8 +47,8 @@ TEST_TIMEOUT=15m
 BENCHMARK_TIMEOUT=20m
 PARALLELISM=10
 
-printf -v OPTIONAL_LIST -- '%s\n' ${OPTIONAL[@]}
-printf -v TO_SKIP_LIST -- '%s\n' ${TO_SKIP[@]}
+OPTIONAL_LIST=`printf  -- '%s\n' ${OPTIONAL[@]}`
+TO_SKIP_LIST=`printf  -- '%s\n' ${TO_SKIP[@]}`
 
 MD_OUT=${GITHUB_STEP_SUMMARY:-$PWD/summary.md}
 if [[ "$MD_OUT" != "$GITHUB_STEP_SUMMARY" ]]; then
@@ -74,10 +76,13 @@ N_TESTS=`echo $TESTS_TO_RUN | wc -w`
 
 echo
 echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
+echo "$PWD"
+echo "__ ${TO_SKIP_LIST} __"
+echo "__ ${OPTIONAL_LIST} __"
 timeout --preserve-status $TEST_TIMEOUT make -j $PARALLELISM -s $TESTS_TO_RUN
 echo "::endgroup::"
-echo "Successful tests: `find -maxdepth 0 -name '*.ok' | wc -l`"
-echo "Failed tests: `find -maxdepth 0 -name '*.fail' | wc -l`"
+echo "Successful tests: `find -name '*.ok' | wc -l`"
+echo "Failed tests: `find -name '*.fail' | wc -l`"
 echo
 
 BENCHMARKS_TO_RUN=`find * -type f -name "*bench*" -executable \
@@ -92,8 +97,8 @@ echo "Successful benchmarks: `find -name '*bench*.ok' | wc -l`"
 echo "Failed benchmarks: `find -name '*bench*.fail' | wc -l`"
 
 
-TESTS_PASSED=`find * -maxdepth 0 -name '*.log.ok' | sed 's/\.log\.ok$//'`
-TESTS_FAILED=`find * -maxdepth 0 -name '*.log.fail' | sed 's/\.log\.fail$//'`
+TESTS_PASSED=`find * -name '*.log.ok' | sed 's/\.log\.ok$//'`
+TESTS_FAILED=`find * -name '*.log.fail' | sed 's/\.log\.fail$//'`
 TESTS_TIMEOUT=`find * -type f -executable \
     | grep -vF "$TESTS_PASSED" \
     | grep -vF "$TESTS_FAILED" \
@@ -109,9 +114,9 @@ N_FAILURES_UNIGNORED=`echo $FAILURES_UNIGNORED | wc -w`
 N_SKIPPED=`echo $TO_SKIP_LIST | wc -w`
 
 echo "## Test summary" >> $MD_OUT
-echo "| Passed | Failed | Ignored | Timeout | Skipped" >> $MD_OUT
-echo "|--------|--------|---------|---------|---------|" >> $MD_OUT
-echo "| $N_PASSED | $N_FAILED | $N_IGNORED | $N_TIMEOUT | $N_SKIPPED |" >> $MD_OUT
+echo "|Workflow| Passed | Failed | Ignored | Timeout | Skipped" >> $MD_OUT
+echo "|--------|--------|--------|---------|---------|---------|" >> $MD_OUT
+echo "| $GITHUB_JOB | $N_PASSED | $N_FAILED | $N_IGNORED | $N_TIMEOUT | $N_SKIPPED |" >> $MD_OUT
 
 
 if [ $N_FAILED -ne 0 ]; then
