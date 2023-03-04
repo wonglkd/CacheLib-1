@@ -73,7 +73,8 @@ jobs:
       - name: "git: ignore unsafe-directories"
         run: git config --global --add safe.directory '*'
       - name: "checkout sources"
-        uses: actions/checkout@v2
+        # v1 needed to avoid checkout error due to git version
+        uses: actions/checkout@v1
       - name: "Install Prerequisites"
         run: ./contrib/build.sh -S -B
       - name: "Test: update-submodules"
