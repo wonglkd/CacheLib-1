@@ -20,6 +20,7 @@ MARKERS_FAIL=$(LOGS:%=%.fail)
 OUTPUT=cachelib-test-summary.log
 
 .PHONY: all clean
+.PRECIOUS: ($LOGS) $(OUTPUT)
 
 all: $(OUTPUT)
 
