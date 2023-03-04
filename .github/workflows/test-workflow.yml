@@ -18,5 +18,6 @@ jobs:
         - name: "Test 123"
           run: |
             echo "::warning 123"
+            echo "::warning file=app.js,line=1,col=5,endColumn=7::Missing semicolon"
             echo "::error 467"
         
