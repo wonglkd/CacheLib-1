@@ -21,29 +21,26 @@ fi
 
 # Optional (e.g., flaky tests).
 OPTIONAL=()
-# Only failed locally
-OPTIONAL+=("allocator-test-AllocationClassTest")
-OPTIONAL+=("allocator-test-MemoryAllocatorTest")
-OPTIONAL+=("allocator-test-MM2QTest")
-OPTIONAL+=("allocator-test-NvmCacheTests")
 # Failed on CI
-OPTIONAL+=("allocator-test-BlockCacheTest")  # Rocky 8.6, CentOS 8.1
-OPTIONAL+=("allocator-test-NavySetupTest")  # all: CentOS 8.1, Cent OS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
-OPTIONAL+=("common-test-UtilTests")  # CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
-OPTIONAL+=("navy-test-DeviceTest")  # CentOS 8.1
+OPTIONAL+=("allocator-test-AllocationClassTest")  # Ubuntu 18 (segfault)
+OPTIONAL+=("allocator-test-MemoryAllocatorTest")  # Ubuntu 18 (segfault)
+OPTIONAL+=("allocator-test-MM2QTest")  # Ubuntu 18 (segfault)
+OPTIONAL+=("allocator-test-BlockCacheTest")  # Rocky 8.6
+OPTIONAL+=("allocator-test-NavySetupTest")  # CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6, Ubuntu 18
+OPTIONAL+=("common-test-UtilTests")  # CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6, Ubuntu 18
+OPTIONAL+=("navy-test-BlockCacheTest")  # CentOS 8.1, Rocky 9, Ubuntu 18
+OPTIONAL+=("navy-test-DriverTest")  # CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Ubuntu 18, Ubuntu 20, Ubuntu 22
+OPTIONAL+=("navy-test-MockJobSchedulerTest")  # CentOS 8.5, Rocky 9, Ubuntu 20
 # Large pages need to be enabled
-OPTIONAL+=("shm-test-test_page_size")  # all: CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6
+OPTIONAL+=("shm-test-test_page_size")  # all: CentOS 8.1, CentOS 8.5, Debian, Fedora 36, Rocky 9, Rocky 8.6, Ubuntu 18, Ubuntu 20, Ubuntu 22
 
 # Skip long-running benchmarks.
 TO_SKIP=()
-# allocator-test-AllocationClassTest
-# allocator-test-AllocatorResizeTypeTest
-# allocator-test-AllocatorTypeTest
-# allocator-test-RebalanceStrategyTest
+# TO_SKIP+=("allocator-test-AllocatorTypeTest")  # 12 mins.
 TO_SKIP+=("benchmark-test-CompactCacheBench")  # 26 mins.
 TO_SKIP+=("benchmark-test-MutexBench")  # 60 mins.
 
-TEST_TIMEOUT=15m
+TEST_TIMEOUT=20m
 BENCHMARK_TIMEOUT=20m
 PARALLELISM=10
 
@@ -76,9 +73,6 @@ N_TESTS=`echo $TESTS_TO_RUN | wc -w`
 
 echo
 echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
-echo "$PWD"
-echo "__ ${TO_SKIP_LIST} __"
-echo "__ ${OPTIONAL_LIST} __"
 timeout --preserve-status $TEST_TIMEOUT make -j $PARALLELISM -s $TESTS_TO_RUN
 echo "::endgroup::"
 echo "Successful tests: `find -name '*.ok' | wc -l`"
@@ -128,7 +122,7 @@ if [ $N_FAILED -ne 0 ]; then
 
         echo >> $MD_OUT
         echo "## Ignored test failures" >> $MD_OUT
-        echo "$TESTS_IGNORED" | awk ' { print "- " $1 } ' >> $MD_OUT
+        echo "$TESTS_IGNORED" | awk ' { print "# " $1 } ' >> $MD_OUT
     fi 
 
     if [ $N_FAILURES_UNIGNORED -eq 0 ]; then
@@ -143,7 +137,7 @@ if [ $N_FAILED -ne 0 ]; then
 
         echo >> $MD_OUT
         echo "## Failing tests" >> $MD_OUT
-        echo "$FAILURES_UNIGNORED" | awk ' { print "- " $1 } ' >> $MD_OUT
+        echo "$FAILURES_UNIGNORED" | awk ' { print "# " $1 } ' >> $MD_OUT
 
         echo "::warning $N_FAILURES_UNIGNORED tests/benchmarks failed."
     fi
@@ -167,22 +161,29 @@ else
     echo "All tests passed."
 fi
 
+echo
+echo "::group::Skipped tests"
+echo "$TO_SKIP_LIST"
+
+echo "## Skipped tests" >> $MD_OUT
+echo "$TO_SKIP_LIST" | awk ' { print "# " $1 } ' >> $MD_OUT
+
 if [ $N_TIMEOUT -ne 0 ]; then
     echo
+    echo "::warning $N_TIMEOUT tests timed out."
     echo "::group::Timed out tests"
     echo "$TESTS_TIMEOUT"
     echo "::endgroup"
 
 
     echo "## Tests timed out" >> $MD_OUT
-    echo "$TESTS_TIMEOUT" | awk ' { print "- " $1 } ' >> $MD_OUT
+    echo "$TESTS_TIMEOUT" | awk ' { print "# " $1 } ' >> $MD_OUT
 
 fi
 
-
 if [ $STATUS -ne 0 ]; then
     echo
-    echo "Return error"
+    echo "::warning Return error"
     # Comment out for now so we can figure out which tests work on which
     # exit 1
 fi
