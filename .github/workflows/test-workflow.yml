@@ -8,10 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     # Docker container image name
     steps:
-      - name: "Use cache for built libraries of submodules"
-        uses: actions/cache@v3
-        id: cache-submodules
-        with:
-          # Using HEAD of submodules
-          key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
-          path: opt/cachelib/lib
+#       - name: "Use cache for built libraries of submodules"
+#         uses: actions/cache@v3
+#         id: cache-submodules
+#         with:
+#           # Using HEAD of submodules
+#           key: ${{ github.job }}-build-${{ hashFiles('.git/modules/*/HEAD') }}
+#           path: opt/cachelib/lib
+        - name: "Test 123"
+          run: |
+            echo "::warning 123"
+            echo "::error 467"
+        
