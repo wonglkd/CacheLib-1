@@ -119,6 +119,7 @@ if [ $N_FAILED -ne 0 ]; then
         echo "::group::Ignored test failures "
         echo "$TESTS_IGNORED"
         echo "::endgroup"
+        echo "::warning ::$N_IGNORED tests/benchmarks failed and ignored."
 
         echo >> $MD_OUT
         echo "## Ignored test failures" >> $MD_OUT
