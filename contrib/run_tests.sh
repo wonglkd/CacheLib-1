@@ -138,7 +138,7 @@ if [ $N_FAILED -ne 0 ]; then
         echo "## Failing tests" >> $MD_OUT
         echo "$FAILURES_UNIGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
-        echo "::error title=Tests failed::$N_FAILURES_UNIGNORED tests/benchmarks failed."
+        echo "::error ::$N_FAILURES_UNIGNORED tests/benchmarks failed."
     fi
 
     echo
@@ -170,7 +170,7 @@ echo "$TO_SKIP_LIST" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
 if [ $N_TIMEOUT -ne 0 ]; then
     echo
-    echo "::error title=Tests timed out::$N_TIMEOUT tests exceeded time limit." \
+    echo "::error ::$N_TIMEOUT tests exceeded time limit." \
         " Consider adding them to TO_SKIP or increasing TEST_TIMEOUT/BENCHMARK_TIMEOUT."
     echo "::group::Timed out tests"
     echo "$TESTS_TIMEOUT"
@@ -184,7 +184,7 @@ fi
 
 if [ $STATUS -ne 0 ]; then
     echo
-    echo "::error Failing tests::Please check the build log."
+    echo "::error ::Please check the build log."
     # Comment out for now so we can figure out which tests work on which
     # exit 1
 fi
