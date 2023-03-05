@@ -122,7 +122,7 @@ if [ $N_FAILED -ne 0 ]; then
 
         echo >> $MD_OUT
         echo "## Ignored test failures" >> $MD_OUT
-        echo "$TESTS_IGNORED" | awk ' { print "# " $1 } ' >> $MD_OUT
+        echo "$TESTS_IGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
     fi 
 
     if [ $N_FAILURES_UNIGNORED -eq 0 ]; then
@@ -136,7 +136,7 @@ if [ $N_FAILED -ne 0 ]; then
 
         echo >> $MD_OUT
         echo "## Failing tests" >> $MD_OUT
-        echo "$FAILURES_UNIGNORED" | awk ' { print "# " $1 } ' >> $MD_OUT
+        echo "$FAILURES_UNIGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
         echo "::error title=Tests failed::$N_FAILURES_UNIGNORED tests/benchmarks failed."
     fi
@@ -166,7 +166,7 @@ echo "$TO_SKIP_LIST"
 echo "::endgroup"
 
 echo "## Skipped tests" >> $MD_OUT
-echo "$TO_SKIP_LIST" | awk ' { print "# " $1 } ' >> $MD_OUT
+echo "$TO_SKIP_LIST" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
 if [ $N_TIMEOUT -ne 0 ]; then
     echo
@@ -178,7 +178,7 @@ if [ $N_TIMEOUT -ne 0 ]; then
 
 
     echo "## Tests timed out" >> $MD_OUT
-    echo "$TESTS_TIMEOUT" | awk ' { print "# " $1 } ' >> $MD_OUT
+    echo "$TESTS_TIMEOUT" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
 fi
 
