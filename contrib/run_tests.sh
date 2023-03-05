@@ -21,7 +21,6 @@ fi
 
 # Optional (e.g., flaky tests).
 OPTIONAL=()
-# Failed on CI
 OPTIONAL+=("allocator-test-AllocationClassTest")  # Ubuntu 18 (segfault)
 OPTIONAL+=("allocator-test-AllocatorResizeTypeTest")  # Rocky 8.6
 OPTIONAL+=("allocator-test-AllocatorTypeTest")  # CentOS 8.5, Rocky 8.6
