@@ -144,17 +144,38 @@ if [ $N_FAILED -ne 0 ]; then
     fi
 
     echo
-    echo "::group::Failure details"
+    echo "::group::Failed tests"
     grep "Segmentation fault" *.log || true
     grep "FAILED.*ms" *.log || true
     echo "::endgroup::"
 
     echo >> $MD_OUT
-    echo "## Failure details" >> $MD_OUT
+    echo "## Failures summary" >> $MD_OUT
     echo "\`\`\`" >> $MD_OUT
     grep "Segmentation fault" *.log >> $MD_OUT || true
     grep "FAILED.*ms" *.log >> $MD_OUT || true
     echo "\`\`\`" >> $MD_OUT
+
+    echo
+    echo "::group::Failure logs with context"
+    echo >> $MD_OUT
+    echo "### Failure logs with context" >> $MD_OUT
+    for faillog in *.log.fail; do
+       logfile="${faillog/\.fail/}"
+       echo
+       echo "::group::Logs:$logfile"
+       grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile
+       grep "Segmentation fault" -B 3 $logfile
+       echo "::endgroup::"
+
+       echo "\`\`\`" >> $MD_OUT
+       echo "---- $logfile ----" >> $MD_OUT
+       grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile >> $MD_OUT
+       grep "Segmentation fault" -B 3 $logfile >> $MD_OUT
+       echo "\`\`\`" >> $MD_OUT
+    done
+    echo "::endgroup::"
+    
 
 else
     STATUS=0
@@ -167,6 +188,7 @@ echo "::group::Skipped tests"
 echo "$TO_SKIP_LIST"
 echo "::endgroup::"
 
+echo >> $MD_OUT
 echo "## Skipped tests" >> $MD_OUT
 echo "$TO_SKIP_LIST" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
