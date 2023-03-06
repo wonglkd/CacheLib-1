@@ -208,7 +208,6 @@ fi
 
 if [ $STATUS -ne 0 ]; then
     echo
-    echo "::error ::Please check the build log."
     # Comment out for now so we can figure out which tests work on which
     # exit 1
 fi
