@@ -157,7 +157,7 @@ if [ $N_FAILED -ne 0 ]; then
     echo "\`\`\`" >> $MD_OUT
 
     echo
-    echo "::group::Failure logs with context"
+    echo "=== Failure logs with context ==="
     echo >> $MD_OUT
     echo "### Failure logs with context" >> $MD_OUT
     for faillog in *.log.fail; do
@@ -168,15 +168,13 @@ if [ $N_FAILED -ne 0 ]; then
        grep "Segmentation fault" -B 3 $logfile
        echo "::endgroup::"
 
+       echo "#### $logfile" >> $MD_OUT
        echo "\`\`\`" >> $MD_OUT
-       echo "---- $logfile ----" >> $MD_OUT
        grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile | sed 's/\x0/---------------\n/g' >> $MD_OUT
        grep "Segmentation fault" -B 3 $logfile >> $MD_OUT
        echo "\`\`\`" >> $MD_OUT
        echo >> $MD_OUT
-    done
-    echo "::endgroup::"
-    
+    done    
 
 else
     STATUS=0
