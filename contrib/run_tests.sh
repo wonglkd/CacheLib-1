@@ -119,7 +119,7 @@ if [ $N_FAILED -ne 0 ]; then
         echo
         echo "::group::Ignored test failures "
         echo "$TESTS_IGNORED"
-        echo "::endgroup"
+        echo "::endgroup::"
         echo "::warning ::$N_IGNORED tests/benchmarks failed and ignored."
 
         echo >> $MD_OUT
@@ -147,7 +147,7 @@ if [ $N_FAILED -ne 0 ]; then
     echo "::group::Failure details"
     grep "Segmentation fault" *.log || true
     grep "FAILED.*ms" *.log || true
-    echo "::endgroup"
+    echo "::endgroup::"
 
     echo >> $MD_OUT
     echo "## Failure details" >> $MD_OUT
@@ -165,7 +165,7 @@ fi
 echo
 echo "::group::Skipped tests"
 echo "$TO_SKIP_LIST"
-echo "::endgroup"
+echo "::endgroup::"
 
 echo "## Skipped tests" >> $MD_OUT
 echo "$TO_SKIP_LIST" | awk ' { print "1. " $1 } ' >> $MD_OUT
@@ -176,7 +176,7 @@ if [ $N_TIMEOUT -ne 0 ]; then
         " Consider adding them to TO_SKIP or increasing TEST_TIMEOUT/BENCHMARK_TIMEOUT."
     echo "::group::Timed out tests"
     echo "$TESTS_TIMEOUT"
-    echo "::endgroup"
+    echo "::endgroup::"
 
 
     echo "## Tests timed out" >> $MD_OUT
