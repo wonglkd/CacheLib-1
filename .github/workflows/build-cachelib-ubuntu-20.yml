@@ -16,8 +16,9 @@ name: build-cachelib-ubuntu-20
 on:
 #  push:
   pull_request:
-  schedule:
-    - cron:  '0 5 * * 1,3,5'
+  workflow_dispatch:
+  # schedule:
+    #- cron:  '0 5 * * 1,3,5'
 jobs:
   build-cachelib-ubuntu-20:
     name: "Ubuntu-20 Build & Test"
