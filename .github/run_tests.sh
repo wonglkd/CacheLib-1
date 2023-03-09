@@ -53,6 +53,24 @@ TEST_TIMEOUT=30m
 BENCHMARK_TIMEOUT=20m
 PARALLELISM=10
 
+print_test_log() {
+  logfile=$1
+  echo "::group::Logs:$logfile"
+  grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile
+  grep "Segmentation fault" -B 3 $logfile
+  echo
+  echo "::endgroup::"
+  echo
+
+  echo "#### $logfile" >> $MD_OUT
+  echo "\`\`\`" >> $MD_OUT
+  grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile \
+    | sed 's/\x0/---------------\n/g' >> $MD_OUT
+  grep "Segmentation fault" -B 3 $logfile >> $MD_OUT
+  echo "\`\`\`" >> $MD_OUT
+  echo >> $MD_OUT
+}
+
 OPTIONAL_LIST=$(printf  -- '%s\n' ${OPTIONAL[@]})
 TO_SKIP_LIST=$(printf  -- '%s\n' ${TO_SKIP[@]})
 
@@ -63,9 +81,8 @@ if [[ "$MD_OUT" != "$GITHUB_STEP_SUMMARY" ]]; then
   echo "Time started: $(date)" > $MD_OUT
 fi
 
-echo "See Summary page of job for a table of test results and log excerpts"
+echo "See Summary page of job for a table of test results and log excerpts."
 echo 
-
 
 dir=$(dirname "$0")
 cd "$dir/.." || die "failed to change-dir into $dir/.."
@@ -84,9 +101,12 @@ TESTS_TO_RUN=$(find * -type f -not -name "*bench*" -executable \
   | awk ' { print $1 ".log" } ')
 N_TESTS=$(echo $TESTS_TO_RUN | wc -w)
 
-echo
-echo "Trying to enable huge pages for shm-test-test_page_size
-sudo sysctl -w vm.nr_hugepages=102400
+if [[ $(< /proc/sys/vm/nr_hugepages) == "0" ]]; then
+  # GitHub's runners have 7GB of RAM (as of 2023)
+  echo
+  echo "Trying to allocate a 1GB huge page pool for shm-test-test_page_size"
+  sudo sysctl -w vm.nr_hugepages=512
+fi
 
 echo
 echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
@@ -131,17 +151,19 @@ echo "| $GITHUB_JOB | $N_PASSED | $N_FAILED | $N_IGNORED | $N_TIMEOUT | $N_SKIPP
 STATUS=0
 
 if [[ $N_FAILED -ne 0 ]]; then
-  if [[ $N_IGNORED -ne 0 ]]; then
-    echo
-    echo "::group::Ignored test failures "
-    echo "$TESTS_IGNORED"
-    echo "::endgroup::"
-    echo "::warning ::$N_IGNORED tests/benchmarks failed and ignored."
 
-    echo >> $MD_OUT
-    echo "## Ignored test failures" >> $MD_OUT
-    echo "$TESTS_IGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
-  fi 
+  echo
+  echo "::group::Failures at a glance"
+  grep "Segmentation fault" *.log || true
+  grep "FAILED.*ms" *.log || true
+  echo "::endgroup::"
+
+  echo >> $MD_OUT
+  echo "## Failures at a glance" >> $MD_OUT
+  echo "\`\`\`" >> $MD_OUT
+  grep "Segmentation fault" *.log >> $MD_OUT || true
+  grep "FAILED.*ms" *.log >> $MD_OUT || true
+  echo "\`\`\`" >> $MD_OUT
 
   if [ $N_FAILURES_UNIGNORED -eq 0 ]; then
     echo "Only ignored tests failed."
@@ -156,41 +178,29 @@ if [[ $N_FAILED -ne 0 ]]; then
     echo "$FAILURES_UNIGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
 
     echo "::error ::$N_FAILURES_UNIGNORED tests/benchmarks failed."
+
+    for failedtest in $FAILURES_UNIGNORED; do
+      echo "::error ::$failedtest failed. See job summary or log for details."
+      print_test_log "$failedtest.log"
+    done
   fi
 
-  echo
-  echo "::group::Failed tests"
-  grep "Segmentation fault" *.log || true
-  grep "FAILED.*ms" *.log || true
-  echo "::endgroup::"
-
-  echo >> $MD_OUT
-  echo "## Failures summary" >> $MD_OUT
-  echo "\`\`\`" >> $MD_OUT
-  grep "Segmentation fault" *.log >> $MD_OUT || true
-  grep "FAILED.*ms" *.log >> $MD_OUT || true
-  echo "\`\`\`" >> $MD_OUT
-
-  echo
-  echo "=== Failure logs with context ==="
-  echo >> $MD_OUT
-  echo "### Failure logs with context" >> $MD_OUT
-  for faillog in *.log.fail; do
-    logfile="${faillog/\.fail/}"
+  if [[ $N_IGNORED -ne 0 ]]; then
     echo
-    echo "::group::Logs:$logfile"
-    grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile
-    grep "Segmentation fault" -B 3 $logfile
+    echo "::group::Ignored test failures "
+    echo "$TESTS_IGNORED"
     echo "::endgroup::"
+    echo "::warning ::$N_IGNORED tests/benchmarks failed and ignored."
 
-    echo "#### $logfile" >> $MD_OUT
-    echo "\`\`\`" >> $MD_OUT
-    grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile \
-      | sed 's/\x0/---------------\n/g' >> $MD_OUT
-    grep "Segmentation fault" -B 3 $logfile >> $MD_OUT
-    echo "\`\`\`" >> $MD_OUT
     echo >> $MD_OUT
-  done    
+    echo "## Ignored test failures" >> $MD_OUT
+    echo "$TESTS_IGNORED" | awk ' { print "1. " $1 } ' >> $MD_OUT
+
+    for failedtest in $TESTS_IGNORED; do
+      echo "::warning ::$failedtest failed & ignored. See job summary or log for details."
+      print_test_log "$failedtest.log"
+    done
+  fi 
 else
   echo
   echo "All tests passed."
