@@ -85,6 +85,10 @@ TESTS_TO_RUN=$(find * -type f -not -name "*bench*" -executable \
 N_TESTS=$(echo $TESTS_TO_RUN | wc -w)
 
 echo
+echo "Trying to enable huge pages for shm-test-test_page_size
+sudo sysctl -w vm.nr_hugepages=102400
+
+echo
 echo "::group::Running tests for CI (total: $N_TESTS, max: $TEST_TIMEOUT)"
 timeout --preserve-status $TEST_TIMEOUT make -j $PARALLELISM -s $TESTS_TO_RUN
 echo "::endgroup::"
