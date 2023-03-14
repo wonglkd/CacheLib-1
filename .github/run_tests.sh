@@ -55,18 +55,21 @@ PARALLELISM=10
 
 print_test_log() {
   logfile=$1
+  # Print failed tests
+  EXP_LOG=$(grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile)
+  # And contents of last test before core dumps
+  if grep -q -R "core dumped" $logfile; then
+    EXP_LOG+=$(tail -r $logfile | sed '/\[ RUN      \]/q' | tail -r)
+  fi
   echo "::group::Logs:$logfile"
-  grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile
-  grep "Segmentation fault" -B 3 $logfile
+  echo "$EXP_LOG"
   echo
   echo "::endgroup::"
   echo
 
   echo "#### $logfile" >> $MD_OUT
   echo "\`\`\`" >> $MD_OUT
-  grep -Pazo "(?s)\[ RUN[^\[]+\[  FAILED[^\n]+ms\)\n" $logfile \
-    | sed 's/\x0/---------------\n/g' >> $MD_OUT
-  grep "Segmentation fault" -B 3 $logfile >> $MD_OUT
+  echo "$EXP_LOG" >> $MD_OUT
   echo "\`\`\`" >> $MD_OUT
   echo >> $MD_OUT
 }
