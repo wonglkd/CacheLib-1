@@ -17,7 +17,7 @@ sudo apt-get update
 sudo apt-get install -y \
   build-essential \
   git \
-  g++ \
+  g++-8 \
   cmake \
   bison flex \
   libboost-all-dev \
